@@ -9,7 +9,24 @@
     // CastCall moved from lapennaa07-dotcom.github.io/tideline-nsw to castcallau.github.io.
     // Keep the rest of the link (e.g. ?spot=gymeabay or /flyer.html) so shared links still open the right page.
     var rest = location.pathname.replace(/^\/tideline-nsw\/?/, '').replace(/^index\.html$/, '');
-    location.replace('https://castcallau.github.io/' + rest + location.search + location.hash);
+    var hash = location.hash;
+    // Browsers keep saved data per web address, so carry the user's catches, pins, alerts and saved spots across once.
+    try {
+      if (!localStorage.getItem('castcall-moved')) {
+        var keys = ['castcall-catches', 'castcall-pins', 'castcall-alerts', 'fish-favs'], data = {}, any = false;
+        keys.forEach(function (k) { var v = localStorage.getItem(k); if (v && v !== '[]') { data[k] = v; any = true; } });
+        if (any) {
+          var s = JSON.stringify(data);
+          if (s.length > 1500000 && data['castcall-catches']) {   // too big for a link: keep the catches, drop their photos
+            data['castcall-catches'] = JSON.stringify(JSON.parse(data['castcall-catches']).map(function (c) { c.photo = null; return c; }));
+            s = JSON.stringify(data);
+          }
+          hash = '#castcall-import=' + encodeURIComponent(s);
+        }
+        localStorage.setItem('castcall-moved', '1');
+      }
+    } catch (e) { /* storage blocked – just redirect */ }
+    location.replace('https://castcallau.github.io/' + rest + location.search + hash);
   </script>
   <meta http-equiv="refresh" content="0; url=https://castcallau.github.io/">
 </head>
